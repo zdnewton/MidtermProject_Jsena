@@ -137,6 +137,27 @@
             thumbnailUrl: "https://www.arcgis.com/sharing/rest/content/items/c50de463235e4161b206d000587af18b/info/thumbnail/thumbnail1561651358957.jpeg?w=400"
         });
 
+                // -------------------------------
+        // Add the Locate widget to enable location services.
+        // -------------------------------
+        const locateWidget = new Locate({
+            view: view,   // Binds the Locate widget to our map view
+            graphic: new Graphic({
+            symbol: {
+                type: "simple-marker",  // Use a simple marker symbol
+                style: "circle",       // Marker shape: circle
+                color: "blue",         // Marker color: blue
+                size: "12px",          // Marker size
+                outline: {             // Outline for the marker symbol
+                color: "white",
+                width: "2px"
+                }
+            }
+            })
+        });
+        // Place the Locate widget at the top-left corner of the view.
+        view.ui.add(locateWidget, "top-left");
+
         // -------------------------------
         // Create and configure the BasemapGallery widget
         // -------------------------------
@@ -169,39 +190,7 @@
         // Add the Expand widget containing the BasemapGallery to the top-right of the view.
         view.ui.add(bgExpand, "top-right");
 
-        // -------------------------------
-        // Add the Locate widget to enable location services.
-        // -------------------------------
-        const locateWidget = new Locate({
-            view: view,   // Binds the Locate widget to our map view
-            graphic: new Graphic({
-            symbol: {
-                type: "simple-marker",  // Use a simple marker symbol
-                style: "circle",       // Marker shape: circle
-                color: "blue",         // Marker color: blue
-                size: "12px",          // Marker size
-                outline: {             // Outline for the marker symbol
-                color: "white",
-                width: "2px"
-                }
-            }
-            })
-        });
-        // Place the Locate widget at the top-left corner of the view.
-        view.ui.add(locateWidget, "top-left");
 
-        // -------------------------------
-        // Add the Search widget for geocoding and address search.
-        // -------------------------------
-
-        const searchWidget = new Search({
-            view: view
-        });
-
-        view.ui.add(searchWidget, {
-            position: "top-left",
-            index: 0
-        });
 
         const graphicsLayer = new GraphicsLayer();  
         map.add(graphicsLayer);
@@ -384,6 +373,8 @@
         const pointInfos = {
         layer: myAirports
         };
+
+        /*
         
         // Begin Editor constructor
         const editor = new Editor({
@@ -400,6 +391,8 @@
 
         // Add the Expand widget containing the Editor to the top-right of the view
         view.ui.add(editorExpand, "top-right");
+
+        */
 
         const surveyLayer = new FeatureLayer({
             url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_9d45bdacef2b4fe9aca9c26c541ac38e_results/FeatureServer"
@@ -431,7 +424,7 @@
         padding: 8px 16px;
         border: none;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 74px;
         cursor: pointer;
         text-decoration: none;
         }
@@ -444,7 +437,7 @@
 
 </head>
 <body>
-    <a href="https://arcg.is/1TrKL51"target="_blank" class="addRecordBtn">Add Record</a>
+    <a href="https://arcg.is/1TrKL51"target="_blank" class="addRecordBtn">+</a>
 
     <!-- the div to display the map-->
     <div id="viewDiv"></div>
