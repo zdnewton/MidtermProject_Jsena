@@ -223,10 +223,6 @@
         const creeksAndWorksitesLayer = new FeatureLayer({
           url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Creeks_and_Worksites/FeatureServer",
           outFields: ["*"], // Adjust the outFields as needed
-          popupTemplate: {
-            title: "Creeks and Worksites",
-            content: "<b>Site Number:</b> {Site_Number_}<br><b>Site Name:</b> {Site_Name_1}<br>" // Customize the popup content as needed
-          },
           renderer: {
             type: "simple",
             symbol: {
@@ -237,7 +233,8 @@
                     width: 2
                 }
             }
-          }
+          },
+          visible: false //layer is off by default
         });
         //----------------------------
         // End of Popups
