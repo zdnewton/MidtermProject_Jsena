@@ -247,7 +247,7 @@
         // Add the Creeks and Worksites layer to the map
         map.add(creeksAndWorksitesLayer);
 
-        view.on("touchstart", function(event) {
+        view.on("pointer-down", function(event) {
             view.hitTest(event).then(function(response) {
                 if (response.results.length) {
                     const graphic = response.results.filter(function(result) {
