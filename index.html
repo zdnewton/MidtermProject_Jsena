@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Hello, Editing!</title>
+  <title>Debris Reporter</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="" />
@@ -37,6 +37,21 @@
     }
 
     .addRecordBtn:hover {
+        background-color: #3B2918;
+    }
+
+    .custom-expand-button {
+        background-color: #523A21;
+        color: white;
+        padding: 8px 16px;
+        border: 2px solid gray;
+        border-radius: 4px;
+        font-size: 14px; /* Adjust the font size as needed */
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .custom-expand-button:hover {
         background-color: #3B2918;
     }
 
@@ -107,7 +122,9 @@
         "esri/layers/VectorTileLayer",
         "esri/symbols/PictureMarkerSymbol",
         "esri/renderers/SimpleRenderer",
+        "esri/renderers/UniqueValueRenderer",
         "esri/widgets/Editor",
+        "esri/widgets/Editor/CreateFeaturesWorkflowData",
         "esri/widgets/BasemapToggle"
       ], function(
           esriConfig, 
@@ -128,7 +145,9 @@
           VectorTileLayer,
           PictureMarkerSymbol,
           SimpleRenderer,
+          UniqueValueRenderer,
           Editor,
+          CreateFeaturesWorkflowData,
           BasemapToggle
         ) 
           
@@ -146,7 +165,7 @@
             container: "viewDiv" // Div element
         });
 
-        //----------------------------
+        /*//----------------------------
         //Basemap Toggle
         //----------------------------
         
@@ -190,7 +209,7 @@
         view.ui.add(toggle, "top-right");   
         //----------------------------
         // End of Basemap Toggle
-        //----------------------------
+        //----------------------------*/
 
         //----------------------------
         // Locate widget
@@ -226,11 +245,10 @@
 
         const creeksAndWorksitesLayer = new FeatureLayer({
           url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Creeks_and_Worksites/FeatureServer",
-          outFields: ["*"], // Adjust the outFields as needed
+          outFields: ["*"],
           renderer: {
             type: "simple",
-            symbol: {
-                type: "simple-fill",
+            symbol: { type: "simple-fill",
                 color: "rgba(0, 150, 255, 0.3)",
                 outline: {
                     color: "rgb(0, 0, 255)",
@@ -240,42 +258,126 @@
           },
           visible: false //layer is off by default
         });
-        //----------------------------
-        // End of Popups
-        //----------------------------
-
 
         // Add the Creeks and Worksites layer to the map
         map.add(creeksAndWorksitesLayer);
 
-        view.on("pointer-down", function(event) {
-            view.hitTest(event).then(function(response) {
-                if (response.results.length) {
-                    const graphic = response.results.filter(function(result) {
-                        return result.graphic.layer === creeksAndWorksitesLayer;
-                    })[0].graphic;
-
-                    const field1 = graphic.attributes.Site_Number_;
-                    const field2 = graphic.attributes.Site_Name_1;
-
-                    const popupContent = document.getElementById("popupContent");
-                    popupContent.innerHTML = `<div>Site num. ${field1}</div><div>${field2}</div>`;
-                }
-            });
-        });    
-
-        // Add event listener to toggle the layer visibility
-        document.getElementById("toggleLayerBtn").addEventListener("click", function() {
-          creeksAndWorksitesLayer.visible = !creeksAndWorksitesLayer.visible;
+        const debrisLayer = new FeatureLayer({
+            url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Debris/FeatureServer",
+            outFields: ["*"],
+            renderer: {
+                type: "unique-value",
+                field: "type",
+                defaultSymbol: {
+                    type: "simple-marker",
+                    color: "gray" // Default color for unmatched values
+                },
+                uniqueValueInfos: [{
+                    value: "B",
+                    symbol: {
+                        type: "simple-marker",
+                        color: "red"
+                    }
+                },{
+                    value: "T",
+                    symbol: {
+                        type: "simple-marker",
+                        color: "yellow"
+                    }
+                },{
+                    value: "M",
+                    symbol: {
+                        type: "simple-marker",
+                        color: "green"
+                    }
+                },{
+                    value: "O",
+                    symbol: {
+                        type: "simple-marker",
+                        color: "purple"
+                    }
+                }]
+            }
         });
 
-        // Survey Layer section
+map.add(debrisLayer);
+        //----------------------------
+        // End of Popups
+        //----------------------------
+
+        //----------------------------
+        // Editor widgit
+        //----------------------------
+        const editor = new Editor({
+            view: view
+        }); 
+
+        const editorExpand = new Expand({
+            expandIcon: "plus",
+            view: view,
+            content: editor
+        });
+        view.ui.add(editorExpand, "top-right")
+        //----------------------------
+        // End editor widgit
+        //----------------------------
+
+
+
+
+        //Event listener on the view const, for displaying the worksite information when you click it.
+
+        let isPointerDown = false;
+
+        let isDragging = false;
+
+        view.on("pointer-down", function(event) {
+            isDragging = false;
+        });
+
+        view.on("pointer-move", function(event) {
+            isDragging = true;
+        });
+
+        view.on("pointer-up", function(event) {
+            if (!isDragging) {
+                view.hitTest(event).then(function(response) {
+                    const popupContent = document.getElementById("popupContent");
+                    if (response.results.length) {
+                        const graphic = response.results.filter(function(result) {
+                            return result.graphic.layer === creeksAndWorksitesLayer;
+                        })[0]?.graphic;
+
+                        if (graphic) {
+                            const field1 = graphic.attributes.Site_Number_;
+                            const field2 = graphic.attributes.Site_Name_1;
+                            popupContent.innerHTML = `<div>Site num. ${field1}</div><div>${field2}</div>`;
+                        } else {
+                            popupContent.innerHTML = ""; // Clear the popup content if no worksite polygon is clicked
+                        }
+                    } else {
+                        popupContent.innerHTML = ""; // Clear the popup content if click is outside any graphic
+                    }
+                });
+            }
+        });
+
+        document.getElementById("toggleLayerBtn").addEventListener("click", function() {
+            creeksAndWorksitesLayer.visible = !creeksAndWorksitesLayer.visible;
+            if (!creeksAndWorksitesLayer.visible) {
+                const popupContent = document.getElementById("popupContent");
+                popupContent.innerHTML = ""; // Clear the popup content if the layer is turned off
+            }
+        });        // Survey Layer section
         const surveyLayer = new FeatureLayer({
           // URL for the layer created in the Survey123
           url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_9d45bdacef2b4fe9aca9c26c541ac38e_results/FeatureServer"
         });
         map.add(surveyLayer, "bottom-right");
       });
+
+
+
     </script>
 
 </body>
