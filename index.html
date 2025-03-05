@@ -21,37 +21,7 @@
         width: 100%;  
     }
 
-    .addRecordBtn {
-        position: absolute;
-        z-index: 10;
-        bottom: 20px;
-        right: 10px;
-        background-color: #523A21;
-        color: white;
-        padding: 8px 16px;
-        border: 2px solid gray;
-        border-radius: 4px;
-        font-size: 74px;
-        cursor: pointer;
-        text-decoration: none;
-    }
-
     .addRecordBtn:hover {
-        background-color: #3B2918;
-    }
-
-    .custom-expand-button {
-        background-color: #523A21;
-        color: white;
-        padding: 8px 16px;
-        border: 2px solid gray;
-        border-radius: 4px;
-        font-size: 14px; /* Adjust the font size as needed */
-        cursor: pointer;
-        text-decoration: none;
-    }
-
-    .custom-expand-button:hover {
         background-color: #3B2918;
     }
 
@@ -93,12 +63,12 @@
 
 </head>
 <body>
-    <!-- I don't think I actually want to use Survey 123 for the data entry but leaving for now. I'd rather use the editing widgit
-      see https://developers.arcgis.com/javascript/latest/sample-code/widgets-editor-configurable/-->
-    <a href="https://arcg.is/1TrKL51" target="_blank" class="addRecordBtn">+</a>
+      <!-- the div to display the worksite IDs and names-->
     <div id="popupContent" class="popup-content"></div>
+    
     <!-- the div to display the map-->
     <div id="viewDiv"></div>
+    
     <!-- Button to toggle the Worksites layer -->
     <button id="toggleLayerBtn" class="toggleLayerBtn">Display Worksite Boundary</button>
 
@@ -125,7 +95,9 @@
         "esri/renderers/UniqueValueRenderer",
         "esri/widgets/Editor",
         "esri/widgets/Editor/CreateFeaturesWorkflowData",
-        "esri/widgets/BasemapToggle"
+        "esri/widgets/BasemapToggle",
+        "esri/views/Theme",
+        "esri/form/FormTemplate"
       ], function(
           esriConfig, 
           Map, 
@@ -148,7 +120,9 @@
           UniqueValueRenderer,
           Editor,
           CreateFeaturesWorkflowData,
-          BasemapToggle
+          BasemapToggle,
+          Theme,
+          FormTemplate
         ) 
           
       {
@@ -162,10 +136,10 @@
             map: map,
             center: [-75.44, 40.13], // Longitude, latitude
             zoom: 13.5, // Zoom level
-            container: "viewDiv" // Div element
+            container: "viewDiv"
         });
 
-        /*//----------------------------
+        //----------------------------
         //Basemap Toggle
         //----------------------------
         
@@ -206,29 +180,18 @@
             label: "Switch Basemaps"
         });
 
-        view.ui.add(toggle, "top-right");   
+        view.ui.add(toggle, "bottom-right");   
         //----------------------------
         // End of Basemap Toggle
-        //----------------------------*/
+        //----------------------------
 
         //----------------------------
         // Locate widget
         //----------------------------
         const locateWidget = new Locate({
-            view: view,   // Binds the Locate widget to our map view
-            graphic: new Graphic({
-                symbol: {
-                    type: "simple-marker",
-                    type: "circle",       // Marker shape: circle
-                    color: "blue",         // Marker color: blue
-                    size: "12px",          // Marker size
-                    outline: {             // Outline for the marker symbol
-                        color: "white",
-                        width: "2px"
-                    }
-                }
-            })
-        });
+            view: view,
+            popupEnabled: false});   // Binds the Locate widget to our map view
+
         // Place the Locate widget at the top-left corner of the view.
         view.ui.add(locateWidget, "top-left");
         //----------------------------
@@ -236,7 +199,7 @@
         //----------------------------
 
         //----------------------------
-        // Popups
+        // Layers & Popups
         //----------------------------
         const popupTemplate = {
           title: "{Name}",
@@ -265,6 +228,7 @@
         const debrisLayer = new FeatureLayer({
             url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Debris/FeatureServer",
             outFields: ["*"],
+            popupTemplate: popupTemplate,
             renderer: {
                 type: "unique-value",
                 field: "type",
@@ -302,22 +266,35 @@
 
 map.add(debrisLayer);
         //----------------------------
-        // End of Popups
+        // End of Layers & Popups
         //----------------------------
-
         //----------------------------
         // Editor widgit
         //----------------------------
         const editor = new Editor({
-            view: view
-        }); 
-
-        const editorExpand = new Expand({
-            expandIcon: "plus",
             view: view,
-            content: editor
+            visibleElements: {
+                createFeatures: true, // Show the create features section
+                selectionTools: false, // Hide the selection tools
+                editFeaturesSection: false, // Hide the edit tools
+                snappingControls: false, // Hide the snapping controls
+                settingsMenu: false,
+                filter: false
+            }
         });
-        view.ui.add(editorExpand, "top-right")
+
+// Listen for the create event
+editor.on("create", function(event) {
+  if (event.state === "complete") {
+    // End the creation session after creating one point
+    editor.cancelWorkflow();
+  }
+});
+
+// Add the Editor widget directly to the view
+view.ui.add(editor, "top-right");
+
+
         //----------------------------
         // End editor widgit
         //----------------------------
