@@ -12,65 +12,86 @@
   
   <!-- style section-->
   <style>  
-    html,  
-    body,  
-    #viewDiv {  
-        padding: 0;  
-        margin: 0;  
-        height: 100%;  
-        width: 100%;  
-    }
+        html,  
+        body,  
+        #viewDiv,  
+        #editorDiv {  
+            padding: 0;  
+            margin: 0;  
+            width: 100%;  
+        }
 
-    .addRecordBtn:hover {
-        background-color: #3B2918;
-    }
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
-    .toggleLayerBtn {
-        position: absolute;
-        z-index: 10;
-        bottom: 20px;
-        left: 10px;
-        background-color: #523A21;
-        color: white;
-        padding: 8px 16px;
-        border: 2px solid gray;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-    }
+        #viewDiv {
+            flex: 2; /* Two-thirds of the height */
+            position: relative;
+        }
 
-    .toggleLayerBtn:hover {
-        background-color: #3B2918;
-    }
+        #editorDiv {
+            flex: 1; /* One-third of the height */
+            overflow: auto;
+        }
 
-    .popup-content {
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        font-size: 25px;
-        color: White;
-        background: none;
-        padding: 10px;
-        z-index: 10;
-        text-shadow: 
-            0 0 5px rgba(255, 255, 255, 0.5), 
-            0 0 10px rgba(255, 255, 255, 0.5), 
-            0 0 15px rgba(255, 255, 255, 0.5);
-    }
-  </style> 
+        .toggleLayerBtn {
+            position: absolute;
+            z-index: 10;
+            bottom: 20px;
+            left: 10px;
+            background-color: #523A21;
+            color: white;
+            padding: 8px 16px;
+            border: 2px solid gray;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .toggleLayerBtn:hover {
+            background-color: #3B2918;
+        }
+
+        .popup-content {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 25px;
+            color: White;
+            background: none;
+            padding: 10px;
+            z-index: 10;
+            text-shadow: 
+                0 0 5px rgba(255, 255, 255, 0.5), 
+                0 0 10px rgba(255, 255, 255, 0.5), 
+                0 0 15px rgba(255, 255, 255, 0.5);
+        }
+    </style> 
 
 </head>
+
 <body>
-      <!-- the div to display the worksite IDs and names-->
-    <div id="popupContent" class="popup-content"></div>
+    <div id="container">
+        <div id="popupContent" class="popup-content"></div>
+
+        <!-- the div to display the map-->
+        <div id="viewDiv">
+
+        <!-- Button to toggle the Worksites layer -->
+        <button id="toggleLayerBtn" class="toggleLayerBtn">Display Worksite Boundary</button>
+        </div>
+
+        <!-- the div to display the editor-->
+        <div id="editorDiv"></div>
+
+    </div>
     
-    <!-- the div to display the map-->
-    <div id="viewDiv"></div>
-    
-    <!-- Button to toggle the Worksites layer -->
-    <button id="toggleLayerBtn" class="toggleLayerBtn">Display Worksite Boundary</button>
+
 
     <script>  
       require([
@@ -128,9 +149,10 @@
       {
         esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurI4HYBmeR5gYg12zbsYuwSLcu8lOjEkj3KvlVR0A9Uqz8RtacDns4meJiceakyloMnMmTNryZIR6mVL2GDGNbq7ZcvWmg0SNyCUdLIkLkL8uK_WnfH7BCMF7uTBNSWlIXLD2ruBowbAMliu9jo0nEozMMxuiP0IPsC1IeHEApl1b5QAVapZ0KsarS4pMRSAZGTCJdf5vyZSdrPlqcNfsPlxJkg1pZ__4_0vNoydHiWqSAT1_nc8jiUwg"
 
+        //add the map
         const map = new Map({ 
             basemap: "arcgis-imagery"
-})
+        });
 
         const view = new MapView({
             map: map,
@@ -163,18 +185,18 @@
         });
 
         // Define the Outdoor basemap
-    const outdoor = new Basemap({
-        baseLayers: [
-            new VectorTileLayer({
-                url: "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles/arcgis/outdoor"
-            })
-        ],
-        title: "Outdoor",
-        id: "outdoor",
-        thumbnailUrl: "https://www.arcgis.com/sharing/rest/content/items/2e8a3ccdfd6d42a995b79812b3b0ebc6/info/thumbnail/thumbnail1655484449400.png"
-    });
+        const outdoor = new Basemap({
+            baseLayers: [
+                new VectorTileLayer({
+                    url: "https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles/arcgis/outdoor"
+                })
+            ],
+            title: "Outdoor",
+            id: "outdoor",
+            thumbnailUrl: "https://www.arcgis.com/sharing/rest/content/items/2e8a3ccdfd6d42a995b79812b3b0ebc6/info/thumbnail/thumbnail1655484449400.png"
+        });
 
-    const toggle = new BasemapToggle({
+        const toggle = new BasemapToggle({
             view: view,
             nextBasemap: outdoor,
             label: "Switch Basemaps"
@@ -199,7 +221,7 @@
         //----------------------------
 
         //----------------------------
-        // Layers & Popups
+        // Add Layers
         //----------------------------
         const popupTemplate = {
           title: "{Name}",
@@ -228,7 +250,6 @@
         const debrisLayer = new FeatureLayer({
             url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Debris/FeatureServer",
             outFields: ["*"],
-            popupTemplate: popupTemplate,
             renderer: {
                 type: "unique-value",
                 field: "type",
@@ -264,54 +285,36 @@
             }
         });
 
-map.add(debrisLayer);
-        //----------------------------
-        // End of Layers & Popups
-        //----------------------------
-        //----------------------------
-        // Editor widgit
-        //----------------------------
-//----------------------------
-// Editor widget
-//----------------------------
-const editor = new Editor({
-    view: view,
-    visibleElements: {
-        createFeatures: {
-            filter: false // Disable the filtering text box
-        },
-        selectionTools: false, // Hide the selection tools
-        editFeaturesSection: false, // Hide the edit tools
-        snappingControls: false, // Hide the snapping controls
-        settingsMenu: false // Hide the settings menu
-    }
-});
-
-const expand = new Expand({
-    expandIcon: "plus",
-    view: view,
-    content: editor
-});
-
-// Add the Editor widget directly to the view
-view.ui.add(expand, "top-right");
-
-//----------------------------
-// End editor widget
-//----------------------------
-
+        map.add(debrisLayer);
 
         //----------------------------
-        // End editor widgit
+        // End of Layers
         //----------------------------
 
+        //----------------------------
+        // Editor widget
+        //----------------------------
+        const editor = new Editor({
+            view: view,
+            visibleElements: {
+                createFeatures: {
+                    filter: false // Disable the filtering text box
+                },
+                selectionTools: false, // Hide the selection tools
+                editFeaturesSection: false, // Hide the edit tools
+                snappingControls: false, // Hide the snapping controls
+                settingsMenu: false // Hide the settings menu
+            }
+        });
 
+        // Add the Editor widget directly to the editorDiv
+        editor.container = "editorDiv";
+        //----------------------------
+        // End of Editor widget
+        //----------------------------
 
-
-        //Event listener on the view const, for displaying the worksite information when you click it.
-
+        // Event listener on the view const, for displaying the worksite information when you click it, but not drag.
         let isPointerDown = false;
-
         let isDragging = false;
 
         view.on("pointer-down", function(event) {
@@ -351,17 +354,8 @@ view.ui.add(expand, "top-right");
                 const popupContent = document.getElementById("popupContent");
                 popupContent.innerHTML = ""; // Clear the popup content if the layer is turned off
             }
-        });        // Survey Layer section
-        const surveyLayer = new FeatureLayer({
-          // URL for the layer created in the Survey123
-          url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/survey123_9d45bdacef2b4fe9aca9c26c541ac38e_results/FeatureServer"
         });
-        map.add(surveyLayer, "bottom-right");
       });
-
-
-
     </script>
-
 </body>
 </html>
