@@ -271,28 +271,34 @@ map.add(debrisLayer);
         //----------------------------
         // Editor widgit
         //----------------------------
-        const editor = new Editor({
-            view: view,
-            visibleElements: {
-                createFeatures: true, // Show the create features section
-                selectionTools: false, // Hide the selection tools
-                editFeaturesSection: false, // Hide the edit tools
-                snappingControls: false, // Hide the snapping controls
-                settingsMenu: false,
-                filter: false
-            }
-        });
+//----------------------------
+// Editor widget
+//----------------------------
+const editor = new Editor({
+    view: view,
+    visibleElements: {
+        createFeatures: {
+            filter: false // Disable the filtering text box
+        },
+        selectionTools: false, // Hide the selection tools
+        editFeaturesSection: false, // Hide the edit tools
+        snappingControls: false, // Hide the snapping controls
+        settingsMenu: false // Hide the settings menu
+    }
+});
 
-// Listen for the create event
-editor.on("create", function(event) {
-  if (event.state === "complete") {
-    // End the creation session after creating one point
-    editor.cancelWorkflow();
-  }
+const expand = new Expand({
+    expandIcon: "plus",
+    view: view,
+    content: editor
 });
 
 // Add the Editor widget directly to the view
-view.ui.add(editor, "top-right");
+view.ui.add(expand, "top-right");
+
+//----------------------------
+// End editor widget
+//----------------------------
 
 
         //----------------------------
