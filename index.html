@@ -62,14 +62,33 @@
             transform: translateX(-50%);
             text-align: center;
             font-size: 25px;
-            color: White;
+            color: rgb(24, 20, 20);             /*Changed to black to enhance readability*/
             background: none;
             padding: 10px;
             z-index: 10;
             text-shadow: 
-                0 0 5px rgba(255, 255, 255, 0.5), 
-                0 0 10px rgba(255, 255, 255, 0.5), 
-                0 0 15px rgba(255, 255, 255, 0.5);
+                0 0 5px rgba(255, 255, 255),    /*Removed Transparency*/
+                0 0 10px rgba(255, 255, 255),   /*Removed Transparency*/
+                0 0 15px rgba(255, 255, 255);   /*Removed Transparency*/
+        }
+
+        /*Added Filter for Debris Layer*/
+        .filterDropdown {
+            position: absolute;
+            z-index: 10;
+            bottom: 60px;
+            left: 10px;
+            background-color: #523A21;
+            color: white;
+            padding: 8px 16px;
+            border: 2px solid gray;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .filterDropdown:hover {
+            background-color: #3B2918;
         }
     </style> 
 
@@ -84,6 +103,16 @@
 
         <!-- Button to toggle the Worksites layer -->
         <button id="toggleLayerBtn" class="toggleLayerBtn">Display Worksite Boundary</button>
+
+        <!-- Dropdown to filter debris layer -->
+        <select id="debrisFilter" class="filterDropdown">
+            <option value="">All Debris</option>
+            <option value="B">Bike</option>
+            <option value="M">Metallic</option>
+            <option value="O">Other Debris</option>
+            <option value="T">Tire</option>
+            
+        </select>
         </div>
 
         <!-- the div to display the editor-->
@@ -355,6 +384,16 @@
                 popupContent.innerHTML = ""; // Clear the popup content if the layer is turned off
             }
         });
+
+        document.getElementById("debrisFilter").addEventListener("change", function(event) {
+            const selectedType = event.target.value;
+            if (selectedType) {
+                debrisLayer.definitionExpression = `type = '${selectedType}'`;
+            } else {
+                debrisLayer.definitionExpression = ""; // Show all debris if no type is selected
+            }
+        });
+
       });
     </script>
 </body>
